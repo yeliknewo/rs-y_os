@@ -2,6 +2,18 @@ use core::ptr::Unique;
 
 use spin::Mutex;
 
+macro_rules! println {
+    ($fmt:expr) => (print!(concat!($fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
+}
+
+macro_rules! print {
+    ($($arg:tt)*) => ({
+            use core::fmt::Write;
+            $crate::vga_buffer::WRITER.lock().write_fmt(format_args!($($arg)*)).unwrap();
+    });
+}
+
 pub static WRITER: Mutex<Writer> = unsafe {
     Mutex::new(
         Writer {
@@ -19,6 +31,12 @@ pub struct Writer {
 }
 
 impl Writer {
+    pub fn clear_screen(&mut self) {
+        for i in 0..BUFFER_HEIGHT {
+            self.clear_row(i);
+        }
+    }
+
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.new_line(),
@@ -63,8 +81,18 @@ impl Writer {
             ascii_character: b' ',
             color_code: self.color_code,
         };
-        self.buffer().chars[row] = [blank; BUFFER_WIDTH];}
+        self.buffer().chars[row] = [blank; BUFFER_WIDTH];
     }
+}
+
+impl ::core::fmt::Write for Writer {
+    fn write_str(&mut self, s: &str) -> ::core::fmt::Result {
+        for byte in s.bytes() {
+          self.write_byte(byte)
+        }
+        Ok(())
+    }
+}
 
 #[repr(C)]
 #[derive(Copy, Clone)]

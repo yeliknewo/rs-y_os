@@ -12,6 +12,7 @@ start:
 
 	call set_up_page_tables
 	call enable_paging
+	call set_up_SSE
 
 	lgdt [gdt64.pointer]
 

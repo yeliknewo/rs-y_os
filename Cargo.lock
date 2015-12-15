@@ -1,5 +1,5 @@
 [root]
-name = "blog_os"
+name = "y_os"
 version = "0.1.0"
 dependencies = [
  "rlibc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
