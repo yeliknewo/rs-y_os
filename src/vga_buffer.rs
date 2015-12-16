@@ -57,12 +57,6 @@ impl Writer {
         }
     }
 
-    pub fn write_bytes(&mut self, bytes: &[u8]){
-        for byte in bytes.into_iter() {
-            self.write_byte(*byte);
-        }
-    }
-
     fn buffer(&mut self) -> &mut Buffer {
         unsafe{ self.buffer.get_mut() }
     }
