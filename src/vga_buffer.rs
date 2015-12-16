@@ -1,5 +1,4 @@
 use core::ptr::Unique;
-
 use spin::Mutex;
 
 macro_rules! println {
