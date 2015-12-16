@@ -19,7 +19,7 @@ clean:
 	@rm -rf build
 
 run: $(iso)
-	@qemu-system-x86_64 -drive format=raw,file=$(iso)
+	@qemu-system-x86_64 -m 500M -drive format=raw,file=$(iso)
 
 iso: $(iso)
 
