@@ -4,7 +4,7 @@
 
 #[no_mangle]
 pub extern fn rust_main() {
-
+    
 }
 
 #[lang = "eh_personality"]
