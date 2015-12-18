@@ -1,39 +1,37 @@
-arch ?= x86_64
+arch := x86_64
 target := $(arch)-unknown-linux-gnu
 kernel := build/kernel-$(arch).bin
+os := build/os-$(arch).iso
+rust_os := target/$(target)/debug/liby_os.a
+linker_script := src/$(arch)/linker.ld
+grub_cfg := src/$(arch)/grub.cfg
+assembly_sources := $(wildcard src/$(arch)/*.asm)
+assembly_objects := $(patsubst src/$(arch)/%.asm, build/$(arch)/%.o, $(assembly_sources))
 
-os := build/os-$(arch).bin
-
-boot := src/assembly/$(arch)/boot/boot.asm
-linker_script := src/other/linker.ld
-
-assembly_sources := $(wildcard src/assembly/$(arch)/*.asm)
-assembly_objects := $(patsubst src/assembly/$(arch)/%.asm, build/assembly/$(arch)/%.o, $(assembly_sources))
-
-rust_sources := $(wildcard src/rust/*.rs)
-rust_objects := $(patsubst src/rust/%.rs, build/rust/%.o, $(rust_sources))
-
-.PHONY: all clean qemu no_kernel cargocargo
+.PHONY: all clean qemu cargo
 
 all: $(os)
 
 clean:
 	@rm -rf build
+	@rm -rf target
 
 qemu: all
-	@qemu-system-$(arch) -hda $(os) -boot c
+	@qemu-system-$(arch) -drive format=raw,file=$(os)
 
-$(os): $(boot) $(kernel)
+cargo:
+	@cargo rustc --target $(target) -- -Z no-landing-pads -C no-redzone
+
+$(os): $(kernel) $(grub_cfg)
+	@mkdir -p build/ostemp/boot/grub
+	@cp $(kernel) build/ostemp/boot/kernel.bin
+	@cp $(grub_cfg) build/ostemp/boot/grub
+	@grub-mkrescue -o $(os) build/ostemp
+	@rm -r build/ostemp
+
+$(kernel): cargo $(rust_os) $(assembly_objects) $(linker_script)
+	@ld -n --gc-sections -T $(linker_script) -o $(kernel) $(assembly_objects) $(rust_os)
+
+build/$(arch)/%.o: src/$(arch)/%.asm
 	@mkdir -p $(shell dirname $@)
-	@nasm -f bin -o $@ $<
-
-$(kernel): $(assembly_objects) $(rust_objects)
-	@ld -n -T $(linker_script) -o $(kernel) $<
-
-build/assembly/$(arch)/%.o: src/assembly/$(arch)/%.asm
-	@mkdir -p $(shell dirname $@)
-	@nasm -f elf64 -o $@ $<
-
-build/rust/%.o: src/rust/%.rs
-	@mkdir -p $(shell dirname $@)
-	@rustc --crate-type lib --target=$(target) -o $@ --emit obj $<
+	@nasm -f elf64 $< -o $@

@@ -1,0 +1,11 @@
+[package]
+name = "y_os"
+version = "0.1.0"
+authors = ["Kiley Owen <yelikdev@gmail.com"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+rlibc = "0.1.4"
+spin = "0.3.4"
