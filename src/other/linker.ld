@@ -1,8 +1,15 @@
 ENTRY(rust_main)
 
 SECTIONS {
-    .text :
-    {
-        *(.text)
+    .text : {
+        *(.text*)
+    }
+
+    .data : {
+        *(.data*)
+    }
+
+    .rodata : {
+        *(.rodata*)
     }
 }
